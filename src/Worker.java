@@ -7,6 +7,13 @@ public class Worker implements Runnable {
     private Orange o = null;
 
 
+    /**
+     * Constructor for the Worker class.
+     * @param name A name for the worker.  Primarily relevant for debugging/logging, not critical for functionality.
+     * @param inputMailbox The mailbox from which the worker will get Oranges.  Either the plant's fresh orange supply mailbox, or a transitory mailbox for moving semi-processed oranges between workers.
+     * @param outputMailbox The mailbox the worker puts the orange in when he is done processing it.
+     * @param behaviors A list of behaviors the worker will perform.  Possible behaviors include "fetch, peel, juice, bottle, ship, send, recieve"."
+     */
     public Worker(String name, BlockingMailbox inputMailbox, BlockingMailbox outputMailbox, String behaviors) {
         this.name = name;
         this.inputMailbox = inputMailbox;
@@ -16,50 +23,47 @@ public class Worker implements Runnable {
         t.start();
     }
 
+    /**
+     * Run method for the Worker.  This is where the worker does work.
+     */
     public void run() {
         System.out.println("Worker " + name + " is running with I/O mailboxes " + inputMailbox + " and " + outputMailbox + " and behaviors " + behaviors);
 
-        // If we are a grunt
-
+        // Wait for the main thread to tell the worker to stop running.
         while (Main.isRunning()) {
 
+            /**
+             * If this worker is a grunt
+             */
             if (behaviors.contains("fetch")) {
-                o = inputMailbox.get();
+                o = inputMailbox.get(); 
                 if (o.getState() == Orange.State.Fetched) {
-                    System.out.println("Worker " + name + " fetched a new orange!");
                 }
             }
             if (behaviors.contains("peel") && o.getState() == Orange.State.Fetched) {
                 o.runProcess();
-                System.out.println("Worker " + name + " peeled an orange!");
             }
             if (behaviors.contains("juice") && o.getState() == Orange.State.Peeled) {
                 o.runProcess();
-                System.out.println("Worker " + name + " juiced an orange!");
             }
             if (behaviors.contains("send") && o.getState() == Orange.State.Squeezed) {
                 outputMailbox.put(o);
-                System.out.println("Worker " + name + " sent an orange to the Bottling mailbox!");
             }
 
-            // If we are a bottler
-
+            /**
+             * If this worker is a bottler
+             */
             if (behaviors.contains("recieve")) {
                 o = inputMailbox.get();
-                System.out.println("Worker " + name + " recieved an orange from the Bottling mailbox!");
             }
             if (behaviors.contains("bottle") && o.getState() == Orange.State.Squeezed) {
                 o.runProcess();
-                System.out.println("Worker " + name + " bottled an orange!");
             }
             if (behaviors.contains("ship") && o.getState() == Orange.State.Bottled) {
                 o.runProcess(); // The "Processed" step.
                 outputMailbox.put(o);
-                System.out.println("Worker " + name + " shipped an orange!");
             }
-            System.out.println("Worker " + name + " ran 1 cycle.");
         }
         System.out.println("Worker " + name + " is stopping...");
     }
-    
 }
