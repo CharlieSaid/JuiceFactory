@@ -1,0 +1,72 @@
+@startuml factory_diagram
+
+class Main {
+    +NUMBER_OF_PLANTS : int
+    +ORANGES_PER_BOTTLE : int
+    +RUNTIME : long
+    +oranges_used : int
+    +bottles_made : int
+    +o : Orange
+    +running : boolean
+    +main(args: String[]) : void
+    +isRunning() : boolean
+    +setRunning(running: boolean) : void
+}
+
+class myPlant {
+    -name : String
+    -oranges_input_Mailbox : BlockingMailbox
+    -bottles_output_Mailbox : BlockingMailbox
+    -grunt_list : Worker[]
+    -bottler_list : Worker[]
+    -bottler_mailbox : BlockingMailbox
+    -shipping_mailbox : BlockingMailbox
+    +myPlant(name: String, oranges_input_Mailbox: BlockingMailbox, bottles_output_Mailbox: BlockingMailbox)
+    +get_name() : String
+    +run() : void
+}
+
+class Worker {
+    -name : String
+    -inputMailbox : BlockingMailbox
+    -outputMailbox : BlockingMailbox
+    -behaviors : String
+    -o : Orange
+    +Worker(name: String, inputMailbox: BlockingMailbox, outputMailbox: BlockingMailbox, behaviors: String)
+    +run() : void
+}
+
+class Orange {
+    -state : State
+    +Orange()
+    +getState() : State
+    +runProcess() : void
+    -doWork() : void
+}
+
+enum State {
+    +Fetched
+    +Peeled
+    +Squeezed
+    +Bottled
+    +Processed
+    +getNext() : State  
+}
+
+class BlockingMailbox {
+    -queue : Queue<Orange>
+    +BlockingMailbox()
+    +put(o: Orange) : void
+    +get() : Orange
+    +isEmpty() : boolean
+    +size() : int
+}
+
+Main --> myPlant
+myPlant --> Worker
+Worker --> Orange
+myPlant --> BlockingMailbox
+Worker --> BlockingMailbox
+BlockingMailbox --> Orange
+
+@enduml
